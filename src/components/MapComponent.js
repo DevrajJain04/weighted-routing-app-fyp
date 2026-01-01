@@ -191,9 +191,7 @@ const RoutePolyline = ({ route, isSelected, isAlternative, onClick }) => {
           lineCap: 'round',
           lineJoin: 'round'
         }}
-        eventHandlers={{
-          click: onClick
-        }}
+        eventHandlers={onClick ? { click: onClick } : {}}
       >
         <Popup>
           <div style={{ minWidth: '150px' }}>

@@ -1,3 +1,16 @@
+/**
+ * @deprecated LEGACY FILE - This file is no longer used for main routing.
+ * 
+ * The app now uses OpenRouteService (ORS) for routing instead of this Dijkstra implementation.
+ * The only functions still in use are formatTime and formatDistance, which have been
+ * moved to utils/formatters.js
+ * 
+ * For routing, see: services/routingService.js
+ * For formatting utilities, see: utils/formatters.js
+ * 
+ * Consider removing this file if no longer needed.
+ */
+
 import { buildGraph, getNormalizationFactors, nodes, calculateBearing, getTurnDirection, getEdges } from '../data/graphData';
 
 /**

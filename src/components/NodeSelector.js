@@ -1,3 +1,14 @@
+/**
+ * @deprecated LEGACY COMPONENT - This component is no longer used.
+ * 
+ * The app now uses LocationSearch.js for dynamic location input with geocoding.
+ * This file used static node presets from graphData.js which is also deprecated.
+ * 
+ * For location input, see: components/LocationSearch.js
+ * 
+ * Consider removing this file if no longer needed.
+ */
+
 import React from 'react';
 import { nodes } from '../data/graphData';
 

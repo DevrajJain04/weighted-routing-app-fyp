@@ -1,6 +1,19 @@
+/**
+ * @deprecated LEGACY FILE - This file is no longer used by the application.
+ * 
+ * The app now uses OpenRouteService (ORS) for routing instead of this static graph.
+ * This file is kept for reference and potential fallback scenarios.
+ * 
+ * For routing, see: services/routingService.js
+ * For location data, the app now uses dynamic geocoding via LocationSearch.js
+ * 
+ * Consider removing this file if no longer needed.
+ */
+
 // Expanded graph data for routing with more nodes for distinct path options
 // Nodes represent locations with coordinates around London area
 
+/** @deprecated Use LocationSearch.js for dynamic location search */
 export const nodes = {
   // Central Area
   A: { id: 'A', name: 'City Center', lat: 51.5074, lng: -0.1278, address: '1 City Square' },

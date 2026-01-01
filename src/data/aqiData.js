@@ -1,7 +1,15 @@
 // AQI Zone data - defines air quality across different areas
-// This simulates real AQI data that would come from sensors/API
+// NOTE: This file provides zone-based AQI data for real-time simulation.
+// For route-based AQI fetching, use services/aqiService.js which supports
+// real API integration (OpenWeather, WAQI, etc.)
+
+import { fetchRouteAQI, fetchLocationAQI, getAQICategory } from '../services/aqiService';
+
+// Re-export the new service functions for backward compatibility
+export { fetchRouteAQI, fetchLocationAQI, getAQICategory };
 
 // AQI zones around London - each zone has a center point, radius, and AQI value
+// This data is used for real-time simulation display on the map
 export const aqiZones = [
   // Green areas - Parks and open spaces (LOW AQI - Good air)
   { id: 'hyde-park', name: 'Hyde Park', lat: 51.5073, lng: -0.1657, radius: 0.015, aqi: 28, type: 'park' },
@@ -121,9 +129,23 @@ export const getAQIAtLocation = (lat, lng) => {
 
 /**
  * Calculate AQI along a route (array of [lat, lng] coordinates)
+ * Uses local zone-based data for real-time simulation display.
+ * 
+ * For production use with real API data, use fetchRouteAQI from aqiService.js instead.
+ * 
+ * @param {Array<[number, number]>} coordinates - Array of [lat, lng] points
+ * @returns {Object} AQI data with average, min, max, and segments
  */
 export const calculateRouteAQI = (coordinates) => {
-  if (!coordinates || coordinates.length === 0) return 50;
+  if (!coordinates || coordinates.length === 0) {
+    return {
+      average: 50,
+      max: 50,
+      min: 50,
+      segments: [],
+      source: 'default'
+    };
+  }
 
   let totalAQI = 0;
   let sampleCount = 0;
@@ -154,8 +176,34 @@ export const calculateRouteAQI = (coordinates) => {
     average: sampleCount > 0 ? Math.round(totalAQI / sampleCount) : 50,
     max: maxAQI,
     min: minAQI,
-    segments: segmentAQIs
+    segments: segmentAQIs,
+    source: 'zone-simulation'
   };
+};
+
+/**
+ * Async version that can use real API data via aqiService
+ * Call this when you want to use real AQI API data instead of zone simulation
+ * 
+ * @param {Array<[number, number]>} coordinates - Array of [lat, lng] points
+ * @returns {Promise<Object>} AQI data with average, min, max, and segments
+ */
+export const calculateRouteAQIAsync = async (coordinates) => {
+  try {
+    const result = await fetchRouteAQI(coordinates);
+    return {
+      average: result.average,
+      max: result.max,
+      min: result.min,
+      segments: result.segments,
+      source: result.provider,
+      fetchedAt: result.fetchedAt
+    };
+  } catch (error) {
+    console.error('Error fetching route AQI from service:', error);
+    // Fallback to zone-based calculation
+    return calculateRouteAQI(coordinates);
+  }
 };
 
 /**
@@ -176,5 +224,10 @@ export default {
   startAQISimulation,
   getAQIAtLocation,
   calculateRouteAQI,
-  getAQIInfo
+  calculateRouteAQIAsync,
+  getAQIInfo,
+  // Re-exported from aqiService for convenience
+  fetchRouteAQI,
+  fetchLocationAQI,
+  getAQICategory
 };

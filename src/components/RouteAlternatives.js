@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatDistance, formatTime } from '../utils/dijkstra';
+import { formatDistance, formatTime } from '../utils/formatters';
 
 const RouteAlternatives = ({ routes, selectedRoute, onRouteSelect }) => {
   if (!routes) return null;
