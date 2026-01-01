@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { nodes, getEdges, findNearestNode } from '../data/graphData';
+import { aqiZones, getAQIInfo } from '../data/aqiData';
 
 // Fix for default marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -32,28 +32,6 @@ const createPinIcon = (color, label) => {
 
 const startPinIcon = createPinIcon('#22c55e', 'A');
 const endPinIcon = createPinIcon('#ef4444', 'B');
-
-const createNodeIcon = (aqi) => {
-  let color = '#6b7280';
-  if (aqi < 50) color = '#22c55e';
-  else if (aqi < 100) color = '#84cc16';
-  else if (aqi < 150) color = '#f59e0b';
-  else color = '#ef4444';
-  
-  return L.divIcon({
-    className: 'node-marker',
-    html: `<div style="
-      background: ${color};
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    "></div>`,
-    iconSize: [12, 12],
-    iconAnchor: [6, 6],
-  });
-};
 
 // Draggable marker component
 const DraggableMarker = ({ position, icon, onDragEnd, popupContent }) => {
@@ -86,51 +64,57 @@ const DraggableMarker = ({ position, icon, onDragEnd, popupContent }) => {
 };
 
 // Map click handler for setting markers
-const MapClickHandler = ({ onMapClick, mode }) => {
+const MapClickHandler = ({ onMapClick, clickMode }) => {
   useMapEvents({
     click: (e) => {
-      if (mode) {
-        onMapClick(e.latlng.lat, e.latlng.lng, mode);
+      if (clickMode) {
+        onMapClick(e.latlng.lat, e.latlng.lng, clickMode);
       }
     },
   });
   return null;
 };
 
-// Edge lines with AQI-based coloring
-const EdgeLines = ({ edges }) => {
-  const drawnEdges = new Set();
+// AQI Zone circles
+const AQIZones = ({ showZones, aqiData }) => {
+  if (!showZones) return null;
+  
+  const zones = aqiData?.zones || aqiZones;
   
   return (
     <>
-      {edges.map((edge, index) => {
-        const edgeKey = [edge.from, edge.to].sort().join('-');
-        if (drawnEdges.has(edgeKey)) return null;
-        drawnEdges.add(edgeKey);
-        
-        const fromNode = nodes[edge.from];
-        const toNode = nodes[edge.to];
-        if (!fromNode || !toNode) return null;
-        
-        // Color based on AQI
-        let color = '#d1d5db';
-        let weight = 2;
-        let opacity = 0.5;
-        
-        if (edge.averageAQI < 50) {
-          color = '#86efac';
-        } else if (edge.averageAQI < 100) {
-          color = '#bef264';
-        } else if (edge.averageAQI > 120) {
-          color = '#fca5a5';
-        }
-        
+      {zones.map((zone) => {
+        const aqiInfo = getAQIInfo(zone.aqi);
         return (
-          <Polyline
-            key={`edge-${index}-${edgeKey}`}
-            positions={[[fromNode.lat, fromNode.lng], [toNode.lat, toNode.lng]]}
-            pathOptions={{ color, weight, opacity, dashArray: '5, 10' }}
-          />
+          <Circle
+            key={zone.id}
+            center={[zone.lat, zone.lng]}
+            radius={zone.radius * 111000} // Convert degrees to meters approximately
+            pathOptions={{
+              color: aqiInfo.color,
+              fillColor: aqiInfo.color,
+              fillOpacity: 0.15,
+              weight: 1,
+              opacity: 0.4
+            }}
+          >
+            <Popup>
+              <div style={{ textAlign: 'center' }}>
+                <strong>{zone.name}</strong>
+                <div style={{ 
+                  marginTop: '5px',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  background: aqiInfo.bgColor,
+                  color: aqiInfo.color,
+                  fontWeight: 600
+                }}>
+                  AQI: {Math.round(zone.aqi)} ({aqiInfo.category})
+                </div>
+                <small style={{ color: '#666' }}>{zone.type}</small>
+              </div>
+            </Popup>
+          </Circle>
         );
       })}
     </>
@@ -138,78 +122,127 @@ const EdgeLines = ({ edges }) => {
 };
 
 // Map bounds handler
-const MapBounds = ({ path, startNode, endNode }) => {
+const MapBounds = ({ routes, startPosition, endPosition }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (path && path.length > 1) {
-      const pathCoords = path.map(nodeId => [nodes[nodeId].lat, nodes[nodeId].lng]);
-      const bounds = L.latLngBounds(pathCoords);
-      map.fitBounds(bounds, { padding: [100, 100] });
-    } else if (startNode && endNode) {
-      const bounds = L.latLngBounds([
-        [nodes[startNode].lat, nodes[startNode].lng],
-        [nodes[endNode].lat, nodes[endNode].lng]
-      ]);
-      map.fitBounds(bounds, { padding: [100, 100] });
+    const bounds = [];
+    
+    // Add route coordinates to bounds
+    if (routes && routes.length > 0) {
+      routes.forEach(route => {
+        if (route.coordinates) {
+          bounds.push(...route.coordinates);
+        }
+      });
     }
-  }, [map, path, startNode, endNode]);
+    
+    // Add start/end positions
+    if (startPosition) bounds.push(startPosition);
+    if (endPosition) bounds.push(endPosition);
+    
+    if (bounds.length > 1) {
+      map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
+    } else if (bounds.length === 1) {
+      map.setView(bounds[0], 14);
+    }
+  }, [map, routes, startPosition, endPosition]);
 
   return null;
 };
 
+// Route polyline with AQI-based coloring
+const RoutePolyline = ({ route, isSelected, isAlternative, onClick }) => {
+  if (!route || !route.coordinates || route.coordinates.length < 2) {
+    return null;
+  }
+
+  // Color based on AQI
+  const getRouteColor = () => {
+    if (route.color) return route.color;
+    const aqi = route.averageAQI || 50;
+    if (aqi <= 50) return '#22c55e';
+    if (aqi <= 100) return '#84cc16';
+    if (aqi <= 150) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  return (
+    <>
+      {/* Shadow/outline for better visibility */}
+      <Polyline
+        positions={route.coordinates}
+        pathOptions={{
+          color: '#000',
+          weight: isSelected ? 8 : 6,
+          opacity: 0.2,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }}
+      />
+      {/* Main route line */}
+      <Polyline
+        positions={route.coordinates}
+        pathOptions={{
+          color: getRouteColor(),
+          weight: isSelected ? 6 : 4,
+          opacity: isAlternative ? 0.5 : 0.9,
+          dashArray: isAlternative ? '10, 10' : null,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }}
+        eventHandlers={{
+          click: onClick
+        }}
+      >
+        <Popup>
+          <div style={{ minWidth: '150px' }}>
+            <strong>{route.label || 'Route'}</strong>
+            <div style={{ marginTop: '8px', fontSize: '13px' }}>
+              <div>📏 {route.distance >= 1000 ? `${(route.distance / 1000).toFixed(1)} km` : `${Math.round(route.distance)} m`}</div>
+              <div>⏱️ {route.duration >= 3600 ? `${Math.floor(route.duration / 3600)}h ${Math.floor((route.duration % 3600) / 60)}m` : `${Math.floor(route.duration / 60)} min`}</div>
+              <div style={{ color: getRouteColor() }}>
+                🌿 AQI: {Math.round(route.averageAQI)}
+              </div>
+            </div>
+          </div>
+        </Popup>
+      </Polyline>
+    </>
+  );
+};
+
 const MapComponent = ({ 
-  startNode, 
-  endNode, 
-  path, 
-  pathColor,
-  alternativeRoutes,
-  selectedRoute,
-  onStartChange,
-  onEndChange,
+  startCoords,
+  endCoords,
+  routes,
+  selectedRouteIndex,
+  showAQIZones,
+  aqiData,
   clickMode,
   onMapClick,
-  highlightedStep
+  onRouteSelect,
+  isLoading
 }) => {
-  const edges = getEdges();
-  
-  // Convert path to coordinates
-  const pathCoordinates = path && path.length > 0
-    ? path.map(nodeId => [nodes[nodeId].lat, nodes[nodeId].lng])
-    : [];
 
-  // Handle draggable marker drag end
+  // Handle draggable marker drag end - calls onMapClick with [lat, lng] array
   const handleStartDragEnd = (lat, lng) => {
-    const nearestNode = findNearestNode(lat, lng);
-    if (nearestNode && nearestNode.id !== endNode) {
-      onStartChange(nearestNode.id);
+    if (onMapClick) {
+      // Temporarily set click mode to start, then call onMapClick
+      onMapClick([lat, lng], 'start');
     }
   };
 
   const handleEndDragEnd = (lat, lng) => {
-    const nearestNode = findNearestNode(lat, lng);
-    if (nearestNode && nearestNode.id !== startNode) {
-      onEndChange(nearestNode.id);
+    if (onMapClick) {
+      onMapClick([lat, lng], 'end');
     }
   };
 
   const handleMapClickInternal = (lat, lng, mode) => {
-    const nearestNode = findNearestNode(lat, lng);
-    if (nearestNode) {
-      if (mode === 'start' && nearestNode.id !== endNode) {
-        onStartChange(nearestNode.id);
-      } else if (mode === 'end' && nearestNode.id !== startNode) {
-        onEndChange(nearestNode.id);
-      }
+    if (onMapClick) {
+      onMapClick([lat, lng], mode);
     }
-    onMapClick && onMapClick(null);
-  };
-
-  // Get average AQI for nodes
-  const getNodeAQI = (nodeId) => {
-    const nodeEdges = edges.filter(e => e.from === nodeId || e.to === nodeId);
-    if (nodeEdges.length === 0) return 75;
-    return nodeEdges.reduce((sum, e) => sum + e.averageAQI, 0) / nodeEdges.length;
   };
 
   return (
@@ -223,139 +256,71 @@ const MapComponent = ({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      <MapBounds path={path} startNode={startNode} endNode={endNode} />
-      <MapClickHandler onMapClick={handleMapClickInternal} mode={clickMode} />
+      <MapBounds 
+        routes={routes} 
+        startPosition={startCoords} 
+        endPosition={endCoords} 
+      />
+      <MapClickHandler onMapClick={handleMapClickInternal} clickMode={clickMode} />
       
-      {/* Background edges */}
-      <EdgeLines edges={edges} />
+      {/* AQI Zones overlay */}
+      <AQIZones showZones={showAQIZones} aqiData={aqiData} />
       
-      {/* Alternative routes (shown as dashed lines) */}
-      {alternativeRoutes && Object.entries(alternativeRoutes).map(([key, route]) => {
-        if (!route.found || key === selectedRoute || route.path.length < 2) return null;
-        const coords = route.path.map(nodeId => [nodes[nodeId].lat, nodes[nodeId].lng]);
+      {/* Alternative routes (rendered first so they appear behind) */}
+      {routes && routes.map((route, index) => {
+        if (index === selectedRouteIndex) return null;
         return (
-          <Polyline
-            key={`alt-${key}`}
-            positions={coords}
-            pathOptions={{
-              color: route.color,
-              weight: 4,
-              opacity: 0.4,
-              dashArray: '10, 10'
-            }}
+          <RoutePolyline
+            key={`route-${index}`}
+            route={route}
+            isSelected={false}
+            isAlternative={true}
+            onClick={() => onRouteSelect && onRouteSelect(index)}
           />
         );
       })}
       
-      {/* Main path */}
-      {pathCoordinates.length > 1 && (
-        <Polyline
-          positions={pathCoordinates}
-          pathOptions={{
-            color: pathColor,
-            weight: 6,
-            opacity: 0.9,
-          }}
+      {/* Selected route */}
+      {routes && routes[selectedRouteIndex] && (
+        <RoutePolyline
+          route={routes[selectedRouteIndex]}
+          isSelected={true}
+          isAlternative={false}
         />
       )}
       
-      {/* Node markers (excluding start/end) */}
-      {Object.values(nodes).map((node) => {
-        if (node.id === startNode || node.id === endNode) return null;
-        const aqi = getNodeAQI(node.id);
-        
-        return (
-          <Marker
-            key={node.id}
-            position={[node.lat, node.lng]}
-            icon={createNodeIcon(aqi)}
-            eventHandlers={{
-              click: () => {
-                if (clickMode === 'start') {
-                  onStartChange(node.id);
-                  onMapClick && onMapClick(null);
-                } else if (clickMode === 'end') {
-                  onEndChange(node.id);
-                  onMapClick && onMapClick(null);
-                }
-              }
-            }}
-          >
-            <Popup>
-              <div style={{ textAlign: 'center', minWidth: '150px' }}>
-                <strong style={{ fontSize: '14px' }}>{node.name}</strong>
-                <br />
-                <small style={{ color: '#666' }}>{node.address}</small>
-                <div style={{ marginTop: '8px', display: 'flex', gap: '5px', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => { onStartChange(node.id); }}
-                    style={{
-                      padding: '4px 8px',
-                      background: '#22c55e',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '11px'
-                    }}
-                  >
-                    Set Start
-                  </button>
-                  <button
-                    onClick={() => { onEndChange(node.id); }}
-                    style={{
-                      padding: '4px 8px',
-                      background: '#ef4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '11px'
-                    }}
-                  >
-                    Set End
-                  </button>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        );
-      })}
-      
-      {/* Highlighted step marker */}
-      {highlightedStep && nodes[highlightedStep] && (
-        <Marker
-          position={[nodes[highlightedStep].lat, nodes[highlightedStep].lng]}
-          icon={L.divIcon({
-            className: 'highlight-marker',
-            html: `<div style="
-              background: #3b82f6;
-              width: 20px;
-              height: 20px;
-              border-radius: 50%;
-              border: 3px solid white;
-              box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
-              animation: pulse 1s infinite;
-            "></div>`,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-          })}
-        />
+      {/* Loading indicator on map */}
+      {isLoading && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'white',
+          padding: '16px 24px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div className="loading-spinner" />
+          <span>Finding routes...</span>
+        </div>
       )}
       
       {/* Start marker (draggable) */}
-      {startNode && nodes[startNode] && (
+      {startCoords && (
         <DraggableMarker
-          position={[nodes[startNode].lat, nodes[startNode].lng]}
+          position={startCoords}
           icon={startPinIcon}
           onDragEnd={handleStartDragEnd}
           popupContent={
             <div style={{ textAlign: 'center' }}>
               <strong style={{ color: '#22c55e' }}>📍 Start Point</strong>
               <br />
-              {nodes[startNode].name}
-              <br />
-              <small>{nodes[startNode].address}</small>
+              <small>{startCoords[0].toFixed(5)}, {startCoords[1].toFixed(5)}</small>
               <br />
               <em style={{ fontSize: '10px', color: '#888' }}>Drag to change location</em>
             </div>
@@ -364,18 +329,16 @@ const MapComponent = ({
       )}
       
       {/* End marker (draggable) */}
-      {endNode && nodes[endNode] && (
+      {endCoords && (
         <DraggableMarker
-          position={[nodes[endNode].lat, nodes[endNode].lng]}
+          position={endCoords}
           icon={endPinIcon}
           onDragEnd={handleEndDragEnd}
           popupContent={
             <div style={{ textAlign: 'center' }}>
               <strong style={{ color: '#ef4444' }}>🏁 Destination</strong>
               <br />
-              {nodes[endNode].name}
-              <br />
-              <small>{nodes[endNode].address}</small>
+              <small>{endCoords[0].toFixed(5)}, {endCoords[1].toFixed(5)}</small>
               <br />
               <em style={{ fontSize: '10px', color: '#888' }}>Drag to change location</em>
             </div>

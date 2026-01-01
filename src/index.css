@@ -592,3 +592,442 @@ body {
     border-radius: 12px 12px 0 0;
   }
 }
+
+/* ====== NEW STYLES FOR ORS INTEGRATION ====== */
+
+/* Panel Sections */
+.panel-section {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.panel-section h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #5f6368;
+  margin-bottom: 12px;
+}
+
+/* Live AQI Status */
+.aqi-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.live-indicator.live {
+  color: #16a34a;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #9ca3af;
+  border-radius: 50%;
+}
+
+.live-indicator.live .pulse-dot {
+  background: #22c55e;
+  animation: pulse 2s infinite;
+}
+
+/* Location Search */
+.locations-section {
+  position: relative;
+}
+
+.location-search {
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.location-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.location-input-wrapper {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  position: relative;
+}
+
+.location-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.location-input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+}
+
+.input-spinner {
+  position: absolute;
+  right: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #1a73e8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 32px;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  max-height: 250px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.suggestion-item:hover {
+  background: #f3f4f6;
+}
+
+.suggestion-icon {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.suggestion-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.suggestion-name {
+  font-size: 0.9rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.suggestion-address {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Swap Button Styling */
+.locations-section .swap-button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e0e0e0;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  font-size: 16px;
+  color: #5f6368;
+  transition: all 0.2s;
+  margin: 4px auto;
+  display: block;
+}
+
+.locations-section .swap-button:hover {
+  background: #f3f4f6;
+  color: #1a73e8;
+}
+
+/* Travel Mode Buttons */
+.travel-mode-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.mode-btn:hover {
+  background: #f3f4f6;
+}
+
+.mode-btn.active {
+  background: #e3f2fd;
+  border-color: #1a73e8;
+  color: #1a73e8;
+}
+
+/* Routes Section */
+.routes-section .route-alternatives {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.routes-section .route-option {
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-left-width: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.routes-section .route-option:hover {
+  background: #f8f9fa;
+}
+
+.routes-section .route-option.selected {
+  background: #e3f2fd;
+  border-color: #1a73e8;
+}
+
+.routes-section .route-header {
+  margin-bottom: 8px;
+}
+
+.routes-section .route-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.routes-section .route-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.routes-section .stat {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* AQI Colors */
+.aqi-good { color: #22c55e; }
+.aqi-moderate { color: #84cc16; }
+.aqi-unhealthy-sensitive { color: #f59e0b; }
+.aqi-unhealthy { color: #ef4444; }
+.aqi-very-unhealthy { color: #dc2626; }
+
+/* Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 24px 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1000;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #1a73e8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Error Message */
+.error-message {
+  margin: 16px;
+  padding: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 0.85rem;
+}
+
+/* AQI Legend */
+.aqi-legend {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 0.75rem;
+  z-index: 1000;
+}
+
+.legend-title {
+  font-weight: 600;
+  color: #374151;
+}
+
+.legend-item {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: currentColor;
+  color: white !important;
+}
+
+.legend-item.aqi-good { background: #22c55e; }
+.legend-item.aqi-moderate { background: #84cc16; }
+.legend-item.aqi-unhealthy-sensitive { background: #f59e0b; }
+.legend-item.aqi-unhealthy { background: #ef4444; }
+
+/* Directions Panel Updates */
+.route-indicator {
+  padding: 8px 16px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.directions-footer {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.aqi-breakdown .aqi-bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.aqi-breakdown .aqi-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.aqi-breakdown .aqi-info {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Direction Step Updates */
+.direction-step {
+  display: flex;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  gap: 8px;
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  background: #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.step-street {
+  font-style: italic;
+  color: #9ca3af;
+}
+
+/* Map Component Styles */
+.custom-marker {
+  background: none;
+  border: none;
+}
+
+.marker-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.marker-icon span {
+  transform: rotate(45deg);
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.marker-icon.start { background: #22c55e; }
+.marker-icon.end { background: #ef4444; }
+
+/* AQI Zone Tooltip */
+.aqi-zone-tooltip {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.aqi-zone-tooltip .zone-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.aqi-zone-tooltip .zone-aqi {
+  font-size: 0.8rem;
+}
+
+/* Route Click Target */
+.route-click-target {
+  cursor: pointer;
+}
+
+.route-click-target:hover {
+  stroke-opacity: 0.8;
+}
