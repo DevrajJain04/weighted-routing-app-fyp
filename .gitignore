@@ -3,6 +3,7 @@
 /.pnp
 .pnp.js
 
+/analysis
 # Testing
 /coverage
 
@@ -26,3 +27,4 @@ yarn-error.log*
 .idea/
 *.swp
 *.swo
+HARDWARE_INTERFACE.md

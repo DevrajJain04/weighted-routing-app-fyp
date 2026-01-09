@@ -13,6 +13,38 @@ const DirectionsPanel = ({
     return null;
   }
 
+  /**
+   * Filter out intermediate "destination" steps
+   * Due to backend making multiple ORS requests for route segments,
+   * we get multiple "arrive at destination" instructions.
+   * Keep only the final one (last occurrence).
+   */
+  const isDestinationStep = (step) => {
+    const instrLower = step.instruction?.toLowerCase() || '';
+    const type = step.type;
+    return type === 10 || 
+           instrLower.includes('arrive') || 
+           instrLower.includes('destination') ||
+           instrLower.includes('reached') ||
+           instrLower.includes('you have arrived');
+  };
+
+  const filteredSteps = (() => {
+    // Find all destination step indices
+    const destinationIndices = steps
+      .map((step, idx) => isDestinationStep(step) ? idx : -1)
+      .filter(idx => idx !== -1);
+    
+    // If 0 or 1 destination steps, no filtering needed
+    if (destinationIndices.length <= 1) {
+      return steps;
+    }
+    
+    // Keep all steps EXCEPT intermediate destinations (keep the last one)
+    const intermediateDestinations = destinationIndices.slice(0, -1);
+    return steps.filter((_, idx) => !intermediateDestinations.includes(idx));
+  })();
+
   // Format distance
   const formatDistance = (meters) => {
     if (meters >= 1000) {
@@ -100,7 +132,7 @@ const DirectionsPanel = ({
 
       {/* Turn-by-turn Directions */}
       <div className="directions-list">
-        {steps.map((step, index) => (
+        {filteredSteps.map((step, index) => (
           <div
             key={index}
             className="direction-step"

@@ -1,19 +1,31 @@
 /**
- * AQI Service - Dynamic Air Quality Index data fetching
+ * AQI Service - Air Quality Index data fetching
  * 
  * This service handles fetching AQI data for route coordinates.
- * Currently uses sample data but is structured for easy integration
- * with real AQI APIs like:
- * - OpenWeather Air Pollution API: https://openweathermap.org/api/air-pollution
- * - IQAir AirVisual API: https://www.iqair.com/air-pollution-data-api
- * - WAQI (World Air Quality Index) API: https://aqicn.org/api/
- * - Google Air Quality API: https://developers.google.com/maps/documentation/air-quality
+ * 
+ * Data Sources (in priority order):
+ * 1. Green Corridor Backend (real-time vehicle telemetry + scraped station data)
+ * 2. External APIs (OpenWeather, WAQI, etc.)
+ * 3. Sample/simulated data (for development)
+ * 
+ * Backend Integration:
+ * - AQI Scraper Service: http://localhost:8082 (monitoring station data)
+ * - Routing Service: http://localhost:8000 (hexagon AQI data)
  */
+
+import { 
+  getAreaAQI as backendGetAreaAQI,
+  getHexagonAQI as backendGetHexagonAQI,
+  getNearestStation,
+  getScrapedStations,
+  isBackendAvailable 
+} from './backendService';
 
 // Configuration - Set your API key here when integrating with a real service
 const AQI_CONFIG = {
-  // Set to 'sample' for development, or 'openweather', 'iqair', 'waqi', 'google' for production
-  provider: 'sample',
+  // Set to 'backend' for Green Corridor, 'sample' for development, 
+  // or 'openweather', 'iqair', 'waqi', 'google' for external APIs
+  provider: process.env.REACT_APP_AQI_PROVIDER || 'backend',
   
   // API keys - add your keys here
   apiKeys: {
@@ -198,6 +210,7 @@ const fetchOpenWeatherAQI = async (lat, lng) => {
 /**
  * Fetch AQI from WAQI (World Air Quality Index) API
  * API Docs: https://aqicn.org/json-api/doc/
+ * @deprecated Consider using fetchBackendAQI for real-time vehicle telemetry data
  */
 const fetchWAQIAQI = async (lat, lng) => {
   const apiKey = AQI_CONFIG.apiKeys.waqi;
@@ -231,6 +244,57 @@ const fetchWAQIAQI = async (lat, lng) => {
 };
 
 /**
+ * Fetch AQI from Green Corridor Backend (vehicle telemetry + scraped data)
+ * This is the primary data source when backend is available
+ */
+const fetchBackendAQI = async (lat, lng) => {
+  try {
+    const station = await getNearestStation(lat, lng);
+    if (station && station.aqi !== undefined) {
+      return Math.round(station.aqi);
+    }
+    // Fallback to sample if no station data
+    return fetchSampleAQI(lat, lng);
+  } catch (error) {
+    console.warn('Backend AQI fetch failed, using sample data:', error.message);
+    return fetchSampleAQI(lat, lng);
+  }
+};
+
+/**
+ * Get AQI heatmap data for a map bounding box from backend
+ * @param {Object} bounds - { north, south, east, west }
+ * @returns {Promise<Object>} Hexagon AQI data for heatmap visualization
+ */
+export const fetchAreaAQIFromBackend = async (bounds) => {
+  try {
+    const data = await backendGetAreaAQI(bounds);
+    return data;
+  } catch (error) {
+    console.error('Error fetching area AQI from backend:', error);
+    return { hexagons: [] };
+  }
+};
+
+/**
+ * Get all scraped AQI monitoring stations from backend
+ * @returns {Promise<Array>} Array of station objects with AQI data
+ */
+export const fetchScrapedStations = async () => {
+  try {
+    const backendUp = await isBackendAvailable();
+    if (!backendUp) {
+      console.warn('Backend not available for scraped stations');
+      return [];
+    }
+    return await getScrapedStations();
+  } catch (error) {
+    console.error('Error fetching scraped stations:', error);
+    return [];
+  }
+};
+
+/**
  * Main AQI fetching function - routes to appropriate provider
  */
 const fetchAQIForCoordinate = async (lat, lng) => {
@@ -244,6 +308,9 @@ const fetchAQIForCoordinate = async (lat, lng) => {
   let aqi;
   
   switch (AQI_CONFIG.provider) {
+    case 'backend':
+      aqi = await fetchBackendAQI(lat, lng);
+      break;
     case 'openweather':
       aqi = await fetchOpenWeatherAQI(lat, lng);
       break;
@@ -382,13 +449,21 @@ export const getAQIServiceConfig = () => ({
   cacheDuration: AQI_CONFIG.cacheDuration,
   hasOpenWeatherKey: !!AQI_CONFIG.apiKeys.openweather,
   hasWAQIKey: !!AQI_CONFIG.apiKeys.waqi,
+  hasBackend: AQI_CONFIG.provider === 'backend',
 });
 
 export default {
+  // Primary methods
   fetchRouteAQI,
   fetchLocationAQI,
   getAQICategory,
   AQI_CATEGORIES,
+  
+  // Backend integration
+  fetchAreaAQIFromBackend,
+  fetchScrapedStations,
+  
+  // Configuration
   clearAQICache,
   configureAQIService,
   getAQIServiceConfig,

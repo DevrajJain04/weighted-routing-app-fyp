@@ -245,7 +245,7 @@ const MapComponent = ({
 
   return (
     <MapContainer
-      center={[51.51, -0.12]}
+      center={[19.0760, 72.8777]}
       zoom={13}
       style={{ height: '100%', width: '100%' }}
     >

@@ -8,55 +8,60 @@ import { fetchRouteAQI, fetchLocationAQI, getAQICategory } from '../services/aqi
 // Re-export the new service functions for backward compatibility
 export { fetchRouteAQI, fetchLocationAQI, getAQICategory };
 
-// AQI zones around London - each zone has a center point, radius, and AQI value
+// AQI zones around Mumbai, India - each zone has a center point, radius, and AQI value
 // This data is used for real-time simulation display on the map
 export const aqiZones = [
   // Green areas - Parks and open spaces (LOW AQI - Good air)
-  { id: 'hyde-park', name: 'Hyde Park', lat: 51.5073, lng: -0.1657, radius: 0.015, aqi: 28, type: 'park' },
-  { id: 'regents-park', name: 'Regents Park', lat: 51.5313, lng: -0.1570, radius: 0.012, aqi: 25, type: 'park' },
-  { id: 'primrose-hill', name: 'Primrose Hill', lat: 51.5396, lng: -0.1615, radius: 0.008, aqi: 22, type: 'park' },
-  { id: 'kensington-gardens', name: 'Kensington Gardens', lat: 51.5069, lng: -0.1795, radius: 0.012, aqi: 30, type: 'park' },
-  { id: 'holland-park', name: 'Holland Park', lat: 51.5028, lng: -0.2040, radius: 0.008, aqi: 32, type: 'park' },
-  { id: 'battersea-park', name: 'Battersea Park', lat: 51.4791, lng: -0.1560, radius: 0.010, aqi: 35, type: 'park' },
-  { id: 'clapham-common', name: 'Clapham Common', lat: 51.4615, lng: -0.1380, radius: 0.012, aqi: 30, type: 'park' },
-  { id: 'greenwich-park', name: 'Greenwich Park', lat: 51.4769, lng: -0.0005, radius: 0.010, aqi: 28, type: 'park' },
-  { id: 'victoria-park', name: 'Victoria Park', lat: 51.5362, lng: -0.0378, radius: 0.012, aqi: 32, type: 'park' },
-  { id: 'hampstead-heath', name: 'Hampstead Heath', lat: 51.5609, lng: -0.1631, radius: 0.020, aqi: 20, type: 'park' },
+  { id: 'sanjay-gandhi', name: 'Sanjay Gandhi National Park', lat: 19.2147, lng: 72.9107, radius: 0.030, aqi: 45, type: 'park' },
+  { id: 'aarey-forest', name: 'Aarey Colony Forest', lat: 19.1550, lng: 72.8671, radius: 0.020, aqi: 52, type: 'park' },
+  { id: 'powai-lake', name: 'Powai Lake Area', lat: 19.1273, lng: 72.9050, radius: 0.012, aqi: 58, type: 'park' },
+  { id: 'juhu-beach', name: 'Juhu Beach', lat: 19.0948, lng: 72.8267, radius: 0.010, aqi: 65, type: 'park' },
+  { id: 'versova-beach', name: 'Versova Beach', lat: 19.1329, lng: 72.8175, radius: 0.008, aqi: 68, type: 'park' },
+  { id: 'marine-drive', name: 'Marine Drive Promenade', lat: 18.9432, lng: 72.8235, radius: 0.012, aqi: 75, type: 'riverside' },
+  { id: 'shivaji-park', name: 'Shivaji Park', lat: 19.0283, lng: 72.8386, radius: 0.008, aqi: 70, type: 'park' },
+  { id: 'bandra-fort', name: 'Bandra Fort Area', lat: 19.0425, lng: 72.8203, radius: 0.006, aqi: 72, type: 'park' },
   
   // Residential areas (MODERATE AQI)
-  { id: 'notting-hill', name: 'Notting Hill', lat: 51.5139, lng: -0.2050, radius: 0.010, aqi: 45, type: 'residential' },
-  { id: 'chelsea', name: 'Chelsea', lat: 51.4875, lng: -0.1687, radius: 0.012, aqi: 48, type: 'residential' },
-  { id: 'hampstead', name: 'Hampstead', lat: 51.5565, lng: -0.1781, radius: 0.010, aqi: 38, type: 'residential' },
-  { id: 'dulwich', name: 'Dulwich', lat: 51.4450, lng: -0.0850, radius: 0.015, aqi: 42, type: 'residential' },
-  { id: 'wimbledon', name: 'Wimbledon', lat: 51.4214, lng: -0.2064, radius: 0.015, aqi: 35, type: 'residential' },
+  { id: 'bandra-west', name: 'Bandra West', lat: 19.0544, lng: 72.8261, radius: 0.012, aqi: 85, type: 'residential' },
+  { id: 'andheri-west', name: 'Andheri West', lat: 19.1197, lng: 72.8464, radius: 0.015, aqi: 92, type: 'residential' },
+  { id: 'juhu', name: 'Juhu', lat: 19.1075, lng: 72.8263, radius: 0.012, aqi: 78, type: 'residential' },
+  { id: 'malad-west', name: 'Malad West', lat: 19.1872, lng: 72.8334, radius: 0.012, aqi: 88, type: 'residential' },
+  { id: 'goregaon', name: 'Goregaon', lat: 19.1663, lng: 72.8526, radius: 0.015, aqi: 95, type: 'residential' },
+  { id: 'borivali', name: 'Borivali', lat: 19.2307, lng: 72.8567, radius: 0.015, aqi: 80, type: 'residential' },
+  { id: 'chembur', name: 'Chembur', lat: 19.0522, lng: 72.8994, radius: 0.012, aqi: 115, type: 'residential' },
+  { id: 'mulund', name: 'Mulund', lat: 19.1726, lng: 72.9566, radius: 0.012, aqi: 98, type: 'residential' },
   
   // Commercial/Urban centers (HIGH AQI)
-  { id: 'oxford-circus', name: 'Oxford Circus', lat: 51.5152, lng: -0.1418, radius: 0.008, aqi: 95, type: 'commercial' },
-  { id: 'piccadilly', name: 'Piccadilly Circus', lat: 51.5099, lng: -0.1342, radius: 0.006, aqi: 92, type: 'commercial' },
-  { id: 'covent-garden', name: 'Covent Garden', lat: 51.5129, lng: -0.1243, radius: 0.006, aqi: 88, type: 'commercial' },
-  { id: 'soho', name: 'Soho', lat: 51.5137, lng: -0.1319, radius: 0.008, aqi: 90, type: 'commercial' },
-  { id: 'leicester-square', name: 'Leicester Square', lat: 51.5103, lng: -0.1301, radius: 0.005, aqi: 85, type: 'commercial' },
+  { id: 'bkc', name: 'Bandra Kurla Complex', lat: 19.0655, lng: 72.8692, radius: 0.015, aqi: 105, type: 'commercial' },
+  { id: 'lower-parel', name: 'Lower Parel', lat: 19.0000, lng: 72.8305, radius: 0.012, aqi: 110, type: 'commercial' },
+  { id: 'andheri-east', name: 'Andheri East', lat: 19.1136, lng: 72.8850, radius: 0.015, aqi: 115, type: 'commercial' },
+  { id: 'churchgate', name: 'Churchgate', lat: 18.9352, lng: 72.8273, radius: 0.008, aqi: 102, type: 'commercial' },
+  { id: 'colaba', name: 'Colaba', lat: 18.9067, lng: 72.8147, radius: 0.010, aqi: 95, type: 'commercial' },
+  { id: 'fort', name: 'Fort Area', lat: 18.9322, lng: 72.8353, radius: 0.012, aqi: 108, type: 'commercial' },
+  { id: 'nariman-point', name: 'Nariman Point', lat: 18.9256, lng: 72.8242, radius: 0.008, aqi: 98, type: 'commercial' },
   
   // Major roads and junctions (VERY HIGH AQI)
-  { id: 'marble-arch', name: 'Marble Arch', lat: 51.5136, lng: -0.1589, radius: 0.005, aqi: 110, type: 'traffic' },
-  { id: 'euston-road', name: 'Euston Road', lat: 51.5280, lng: -0.1340, radius: 0.020, aqi: 115, type: 'traffic' },
-  { id: 'old-street', name: 'Old Street Roundabout', lat: 51.5256, lng: -0.0875, radius: 0.006, aqi: 105, type: 'traffic' },
-  { id: 'elephant-castle', name: 'Elephant & Castle', lat: 51.4946, lng: -0.1007, radius: 0.008, aqi: 108, type: 'traffic' },
-  { id: 'vauxhall', name: 'Vauxhall Cross', lat: 51.4861, lng: -0.1228, radius: 0.006, aqi: 102, type: 'traffic' },
+  { id: 'dadar', name: 'Dadar Junction', lat: 19.0178, lng: 72.8478, radius: 0.010, aqi: 125, type: 'traffic' },
+  { id: 'kurla', name: 'Kurla Junction', lat: 19.0726, lng: 72.8845, radius: 0.012, aqi: 130, type: 'traffic' },
+  { id: 'ghatkopar', name: 'Ghatkopar', lat: 19.0858, lng: 72.9081, radius: 0.012, aqi: 128, type: 'traffic' },
+  { id: 'sion', name: 'Sion', lat: 19.0404, lng: 72.8619, radius: 0.010, aqi: 122, type: 'traffic' },
+  { id: 'worli', name: 'Worli', lat: 19.0176, lng: 72.8150, radius: 0.012, aqi: 118, type: 'traffic' },
+  { id: 'santacruz', name: 'Santacruz Junction', lat: 19.0809, lng: 72.8382, radius: 0.010, aqi: 115, type: 'traffic' },
+  { id: 'vile-parle', name: 'Vile Parle', lat: 19.0990, lng: 72.8432, radius: 0.010, aqi: 112, type: 'traffic' },
+  { id: 'western-express', name: 'Western Express Highway', lat: 19.1200, lng: 72.8550, radius: 0.025, aqi: 135, type: 'traffic' },
   
   // Industrial/Heavy traffic zones (UNHEALTHY AQI)
-  { id: 'city-road', name: 'City Road A501', lat: 51.5300, lng: -0.0950, radius: 0.015, aqi: 125, type: 'industrial' },
-  { id: 'tower-bridge', name: 'Tower Bridge Road', lat: 51.5055, lng: -0.0754, radius: 0.008, aqi: 118, type: 'traffic' },
-  { id: 'blackwall-tunnel', name: 'Blackwall Tunnel Approach', lat: 51.5078, lng: -0.0095, radius: 0.010, aqi: 145, type: 'industrial' },
-  { id: 'isle-of-dogs', name: 'Isle of Dogs', lat: 51.4948, lng: -0.0183, radius: 0.015, aqi: 135, type: 'industrial' },
-  { id: 'canary-wharf', name: 'Canary Wharf', lat: 51.5054, lng: -0.0235, radius: 0.012, aqi: 130, type: 'industrial' },
-  { id: 'a13-corridor', name: 'A13 Corridor', lat: 51.5100, lng: -0.0400, radius: 0.025, aqi: 155, type: 'industrial' },
-  { id: 'stratford', name: 'Stratford High Street', lat: 51.5430, lng: -0.0026, radius: 0.010, aqi: 120, type: 'traffic' },
+  { id: 'mahul', name: 'Mahul Industrial Area', lat: 19.0236, lng: 72.9139, radius: 0.015, aqi: 180, type: 'industrial' },
+  { id: 'trombay', name: 'Trombay', lat: 19.0069, lng: 72.9243, radius: 0.020, aqi: 165, type: 'industrial' },
+  { id: 'eastern-freeway', name: 'Eastern Freeway', lat: 19.0300, lng: 72.8700, radius: 0.020, aqi: 140, type: 'traffic' },
+  { id: 'sewri', name: 'Sewri', lat: 19.0022, lng: 72.8567, radius: 0.012, aqi: 145, type: 'industrial' },
+  { id: 'wadala', name: 'Wadala', lat: 19.0180, lng: 72.8681, radius: 0.012, aqi: 138, type: 'industrial' },
+  { id: 'mumbai-port', name: 'Mumbai Port Area', lat: 18.9553, lng: 72.8478, radius: 0.015, aqi: 155, type: 'industrial' },
   
-  // River areas (Generally better air)
-  { id: 'south-bank', name: 'South Bank', lat: 51.5076, lng: -0.1150, radius: 0.015, aqi: 55, type: 'riverside' },
-  { id: 'embankment', name: 'Victoria Embankment', lat: 51.5074, lng: -0.1224, radius: 0.012, aqi: 60, type: 'riverside' },
-  { id: 'thames-barrier', name: 'Thames Barrier Park', lat: 51.5010, lng: 0.0358, radius: 0.008, aqi: 45, type: 'riverside' },
+  // Coastal areas (Generally better air)
+  { id: 'worli-sea-face', name: 'Worli Sea Face', lat: 19.0145, lng: 72.8145, radius: 0.010, aqi: 82, type: 'riverside' },
+  { id: 'haji-ali', name: 'Haji Ali', lat: 18.9827, lng: 72.8089, radius: 0.008, aqi: 78, type: 'riverside' },
+  { id: 'nariman-point-sea', name: 'Nariman Point Seaface', lat: 18.9220, lng: 72.8200, radius: 0.010, aqi: 85, type: 'riverside' },
 ];
 
 // Store for real-time AQI updates
