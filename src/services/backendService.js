@@ -24,7 +24,7 @@ const REQUEST_TIMEOUT = 30000;
 const fetchWithTimeout = async (url, options = {}, timeout = REQUEST_TIMEOUT) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -57,12 +57,12 @@ export async function calculateRoute(origin, destination, balance = 0.5, alterna
       alternatives,
     }),
   });
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Route calculation failed: ${response.status} - ${errorText}`);
   }
-  
+
   return response.json();
 }
 
@@ -85,12 +85,12 @@ export async function getDetailedRoute(origin, destination, balance = 0.5) {
       alternatives: 1, // Detailed endpoint returns single best route
     }),
   });
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Detailed route calculation failed: ${response.status} - ${errorText}`);
   }
-  
+
   return response.json();
 }
 
@@ -113,12 +113,12 @@ export async function getNavigation(routeCoordinates, origin, destination, profi
       profile,
     }),
   });
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Navigation failed: ${response.status} - ${errorText}`);
   }
-  
+
   return response.json();
 }
 
@@ -151,12 +151,12 @@ export async function getAreaAQI(bounds) {
       west: bounds.west,
     }),
   });
-  
+
   if (!response.ok) {
     console.warn('Area AQI fetch failed, returning empty data');
     return { hexagons: [] };
   }
-  
+
   return response.json();
 }
 
@@ -194,11 +194,11 @@ export async function submitTelemetry(vehicleId, lat, lng, aqi) {
       timestamp: new Date().toISOString(),
     }),
   });
-  
+
   if (!response.ok) {
     throw new Error(`Telemetry submission failed: ${response.status}`);
   }
-  
+
   return response.json();
 }
 
@@ -213,11 +213,11 @@ export async function submitBatchTelemetry(dataArray) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ data: dataArray }),
   });
-  
+
   if (!response.ok) {
     throw new Error(`Batch telemetry submission failed: ${response.status}`);
   }
-  
+
   return response.json();
 }
 
@@ -339,7 +339,7 @@ export async function isBackendAvailable() {
 export function convertBackendRoute(backendRoute, index = 0) {
   // Convert coordinates from [lng, lat] to [lat, lng] for Leaflet
   const geometry = backendRoute.coordinates.map(coord => [coord[1], coord[0]]);
-  
+
   return {
     index,
     route_id: backendRoute.route_id,
@@ -354,6 +354,12 @@ export function convertBackendRoute(backendRoute, index = 0) {
     metadata: backendRoute.metadata || {},
     found: true,
     source: 'backend',
+    // Enhanced AQI fields
+    avgAqiWeighted: backendRoute.avg_aqi_weighted,
+    exposureScore: backendRoute.exposure_score,
+    timeInAqiBands: backendRoute.time_in_aqi_bands,
+    aqiMetadata: backendRoute.aqi_metadata,
+    explanation: backendRoute.explanation,
   };
 }
 
@@ -386,21 +392,21 @@ export default {
   getHexagonAQI,
   getAreaAQI,
   getServiceStats,
-  
+
   // Ingestion
   submitTelemetry,
   submitBatchTelemetry,
   getIngestionStats,
-  
+
   // Scraper
   getScrapedStations,
   getNearestStation,
   triggerAQIFetch,
-  
+
   // Health
   checkBackendHealth,
   isBackendAvailable,
-  
+
   // Utilities
   convertBackendRoute,
   getAQIColor,
